@@ -62,7 +62,7 @@ public final class SitPlugin extends JavaPlugin implements Listener
 
         if (sitting.contains(player))
         {
-            player.sendMessage("§cYou are aldready sitting!");
+            player.sendMessage("§cYou are already sitting!");
             return true;
         }
 
