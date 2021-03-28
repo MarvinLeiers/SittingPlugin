@@ -10,7 +10,7 @@ Download the plugin [here](https://www.spigotmc.org/resources/sitting-plugin.872
 
 ## Permission
 Inside the config.yml, change this setting to use permissions (true) or don't use them (false) - false by default.
-```
+```yaml
 ############################
 ### # General Settings # ###
 ############################
