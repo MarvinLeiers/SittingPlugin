@@ -1,10 +1,12 @@
 package de.marvinleiers.sitplugin.commands;
 
+import de.marvinleiers.sitplugin.SitPlugin;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -16,7 +18,8 @@ import java.util.ArrayList;
 
 public class SitCommand implements CommandExecutor, Listener
 {
-    private static ArrayList<Player> sitting = new ArrayList<>();
+    private static final FileConfiguration config = SitPlugin.getInstance().getConfig();
+    private static final ArrayList<Player> sitting = new ArrayList<>();
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -28,6 +31,12 @@ public class SitCommand implements CommandExecutor, Listener
         }
 
         Player player = (Player) sender;
+
+        if (config.getBoolean("use-permission") && !player.hasPermission("mplugin.sitplugin.sit"))
+        {
+            player.sendMessage("§cError: §eYou are not permitted to do that!");
+            return true;
+        }
 
         if (!player.isOnGround())
         {

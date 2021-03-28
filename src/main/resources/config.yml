@@ -1,0 +1,14 @@
+#########################################################
+#                                                       #
+#               Plugin by Marvin Leiers                 #
+#             https://www.marvinleiers.de               #
+#                                                       #
+#########################################################
+
+
+############################
+### # General Settings # ###
+############################
+
+# Whether /sit requires the user to have a certain permission. Permission is "mplugin.sitplugin.sit"
+use-permission: false

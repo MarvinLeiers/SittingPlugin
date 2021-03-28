@@ -13,6 +13,8 @@ public final class SitPlugin extends JavaPlugin
     @Override
     public void onEnable()
     {
+        saveDefaultConfig();
+        
         console = Bukkit.getConsoleSender();
 
         this.getCommand("sit").setExecutor(new SitCommand());
@@ -33,5 +35,10 @@ public final class SitPlugin extends JavaPlugin
         console.sendMessage("\t\t§bhttps://www.marvinleiers.de");
         console.sendMessage(" ");
         console.sendMessage(" ");
+    }
+
+    public static SitPlugin getInstance()
+    {
+        return getPlugin(SitPlugin.class);
     }
 }
