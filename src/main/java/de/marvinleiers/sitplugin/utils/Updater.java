@@ -9,26 +9,24 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
+import java.io.*;
 import java.net.URL;
+import java.net.URLConnection;
 
 public class Updater
 {
-    private static ConsoleCommandSender console = Bukkit.getConsoleSender();
+    private static final ConsoleCommandSender console = Bukkit.getConsoleSender();
+    private static final String PREFIX = "§9[§9§lMUpdater§9]§r";
     private final JavaPlugin plugin;
     private UpdateStatus status;
-    private String message, updateMessage;
+    private String message, updateMessage, downloadLink;
 
     public Updater(JavaPlugin plugin)
     {
         this.plugin = plugin;
         this.status = UpdateStatus.UNDEFINED;
 
-        final ConsoleCommandSender console = Bukkit.getConsoleSender();
-        final String url = "https://api.marvinleiers.de/resource/" + plugin.getDescription().getName().toLowerCase();
+        final String url = "https://api.marvinleiers.de/resource/" + plugin.getDescription().getName().toLowerCase().trim();
 
         execute(url);
     }
@@ -40,13 +38,11 @@ public class Updater
             updateMessage = null;
             status = UpdateStatus.UNDEFINED;
 
-            try
+            receivedData = getData(url);
+
+            if (receivedData == null)
             {
-                receivedData = getData(url);
-            }
-            catch (IOException e)
-            {
-                console.sendMessage("§cCould not reach update server for " + plugin.getName());
+                sendMessage("§cCould not reach update server for " + plugin.getName());
                 return;
             }
 
@@ -55,6 +51,14 @@ public class Updater
             try
             {
                 JSONObject obj = (JSONObject) jsonParser.parse(receivedData);
+
+                if (obj.containsKey("block"))
+                {
+                    boolean allow = !Boolean.parseBoolean((String) obj.get("block"));
+
+                    if (!allow)
+                        Bukkit.getServer().getPluginManager().disablePlugin(plugin);
+                }
 
                 if (obj.get("version") != null)
                 {
@@ -66,26 +70,25 @@ public class Updater
                     {
                         this.status = UpdateStatus.UPDATE;
 
-                        String downloadLink = (String) obj.get("link");
+                        downloadLink = (String) obj.get("link");
 
                         this.updateMessage = "§cThere is a newer version of §4§l" + plugin.getName() + "§c available. Download at: §e"
                                 + downloadLink;
 
-                        console.sendMessage(updateMessage);
+                        sendMessage(updateMessage);
                     }
                     else
                     {
                         this.status = UpdateStatus.NO_UPDATE;
                         this.updateMessage = "No update found. You are running the newest version of " + plugin.getName() + ". Yay!";
 
-                        console.sendMessage(updateMessage);
+                        sendMessage(updateMessage);
                     }
 
                     if (obj.containsKey("message"))
                     {
                         this.message = ChatColor.translateAlternateColorCodes('&', (String) obj.get("message"));
-
-                        console.sendMessage(message);
+                        sendMessage(message);
                     }
 
                     this.sendUpdateNotifications();
@@ -101,32 +104,73 @@ public class Updater
     private void sendUpdateNotifications()
     {
         Bukkit.getScheduler().runTask(plugin, () -> {
-            if (status != UpdateStatus.UNDEFINED && updateMessage != null)
+            if (this.status == UpdateStatus.UPDATE && updateMessage != null)
             {
                 for (Player player : Bukkit.getOnlinePlayers())
                 {
                     if (player.isOp())
-                        player.sendMessage("§9[" + plugin.getName() + "] §7" + updateMessage);
+                        sendUpdateNotification(player);
                 }
             }
         });
     }
 
-    public void sendUpdateNotification(Player player)
+    private void sendMessage(String msg)
     {
-        if (status != UpdateStatus.UNDEFINED && updateMessage != null)
-            player.sendMessage("§9[" + plugin.getName() + "] §7" + updateMessage);
+        console.sendMessage(PREFIX + " " + msg);
     }
 
-    public String getData(String urlString) throws IOException
+    public void sendUpdateNotification(Player player)
     {
-        URL url = new URL(urlString);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        if (this.status == UpdateStatus.UPDATE && updateMessage != null)
+            player.sendMessage(PREFIX + " §cThis version of §e" + plugin.getName() + " §cis outdated! Download here §e" + downloadLink);
+    }
 
-        con.setRequestMethod("POST");
+    public String getData(String urlString)
+    {
+        BufferedReader in = null;
+
+        try
+        {
+            URL url = new URL(urlString);
+            URLConnection connection = url.openConnection();
+            String redirect = connection.getHeaderField("Location");
+
+            if (redirect != null)
+                connection = new URL(redirect).openConnection();
+
+            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+            return in.readLine();
+        }
+        catch (IOException e)
+        {
+            return null;
+        }
+        finally
+        {
+            try
+            {
+                if (in == null)
+                {
+                    return null;
+                }
+
+                in.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        /* alter code
+        URL url = new URL(urlString);
+        con = (HttpURLConnection) url.openConnection();
+
+        con.setRequestMethod("GET");
         con.setInstanceFollowRedirects(true);
         con.setDoOutput(true);
-        con.setDoInput(true);
 
         DataOutputStream output = new DataOutputStream(con.getOutputStream());
         output.close();
@@ -142,7 +186,8 @@ public class Updater
         }
 
         input.close();
-
         return result.toString();
+
+         */
     }
 }
