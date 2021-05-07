@@ -5,6 +5,16 @@ Request your custom plugin here: [Fiverr](https://www.marvinleiers.de/plugin)
 Download the plugin [here](https://www.spigotmc.org/resources/sitting-plugin.87293/)
 
 ## What the plugin does
-_SittingPlugin_ allows your players to use /sit in order to make them appear sitting on the ground. Sitting looks like this:
+* allows your players to use /sit in order to make them appear sitting on the ground.
+* optional usage of permissions, so only players you trust can execute the command.
 
-![Player using /sit](https://images.marvinleiers.de/img/2021-02-03_09.12.30.png)
+## Permission
+Inside the config.yml, change this setting to use permissions (true) or don't use them (false) - false by default.
+```yaml
+############################
+### # General Settings # ###
+############################
+
+# Whether /sit requires the user to have a certain permission. Permission is "mplugin.sitplugin.sit"
+use-permission: false
+```
